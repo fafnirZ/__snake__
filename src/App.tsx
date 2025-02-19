@@ -4,51 +4,83 @@ import viteLogo from '/vite.svg'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
 
-  const [snake, setSnake] = useState(new Snake());
-
-  useEffect(() => {
-    setSnake(new Snake());
-  }, [])
 
   return (
-       <Grid snake={snake}/>
+       <Grid/>
   )
 }
 
 
-function Grid(snake: Snake) {
+function Grid() {
     
     const gridsize = 20;
+    const [snake, setSnake] = useState<Snake>(new Snake());
+    const [grid, setGrid] = useState<boolean[][]>(null);
 
-    return (
+    // onupdate
+    useEffect(() => {
+        if (!snake) return;
+        setGrid(updateGrid())
+    }, [snake])
+
+    // onmount
+    useEffect(() => {
+        setSnake(new Snake())
+    }, [])
+
+    const updateGrid = () => {
+        return Array.from({length: gridsize * gridsize}).map((_, index) => {
+            const row = Math.floor(index/gridsize);
+            const col = index % gridsize;
+            let snake_fill = snake.body.some(item => item.x === col & item.y === row);
+            return snake_fill;
+        })
+
+    }
+
+    const render = () => (
         <div style={{ display: 'grid', gridTemplateColumns: `repeat(${gridsize}, 1fr)`, gap: '1px', width: '400px', height: '400px' }}>
         {
-            Array.from({length: gridsize * gridsize}).map((_, index) => {
-                const row = Math.floor(index/gridsize);
-                const col = index % gridsize;
-                const snake_fill = snake.snake.body.includes({x: col, y: row});
-                console.log(col)
-                console.log(row)
-                console.log(snake_fill)
-                return (
-                    <Square row={row} col={col} snake_fill={snake_fill}/>
-                )
-            })
+            grid.map(
+                (snake_fill, index) => {
+                    const row_idx = Math.floor(index/gridsize);
+                    const col_idx = index % gridsize;
+                    console.log(snake_fill)
+                    return (
+                        <Square key={`${row_idx}_${col_idx}`} row={row_idx} col={col_idx} snake_fill={snake_fill}/>
+                    )
+                }
+            )
         }
         </div>
     );
+
+    if (!grid) {
+        return (<></>);
+    }
+    return render();
 };
 
 function Square(row: number, col: number, snake_fill: bool) {
+    
+    const [colour, setColour] = useState("white");
 
+    useEffect(() => {
+        setColour(
+            snake_fill == true ? "black" : "white"
+        )
+    },[])
+
+    useEffect(() => {
+        console.log(colour)
+    })
     return (
        <div   
         style={{
               width: '20px',
               height: '20px', // Adjust height as needed
-              background: snake_fill ? 'black': 'white',
+              background: colour,
               border: '3px solid #ccc', // Optional border
              // Add any other styles or event handlers you need.
         }}
